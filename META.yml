@@ -1,5 +1,5 @@
 name: Email-Stuff
-version: 0.05
+version: 0.06
 abstract: Email stuff to people and things... and, like, stuff
 author: Adam Kennedy<cpan@ali.as>
 license: perl
@@ -9,6 +9,7 @@ build_requires:
   File::Spec: 0.82
 requires:
   perl: 5.005
+  prefork: 0.02
   Clone: 0.13
   Email::MIME: 1.6
   Email::MIME::Creator: 1.3

@@ -1,5 +1,8 @@
 Revision history for Perl extension Email::Stuff
 
+0.06  Sun Nov  6 2004
+	- Adding prefork pragma for File::Type and File::Slurp
+
 0.05  Sun Oct  2 2004
 	- Added support for coercion to an Email::MIME object
 

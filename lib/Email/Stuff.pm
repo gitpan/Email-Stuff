@@ -82,10 +82,12 @@ use File::Basename       ();
 use Email::MIME          ();
 use Email::MIME::Creator ();
 use Email::Send          ();
+use prefork 'File::Type';
+use prefork 'File::Slurp';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 }
 
 
