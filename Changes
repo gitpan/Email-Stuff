@@ -1,5 +1,11 @@
 Revision history for Perl extension Email::Stuff
 
+0.04  Sun Sep 26 2004
+	- First working version, although not thoroughly tested.
+
+0.03  Fri Sep 24 2004
+	- Bigger chunk of the work completed
+
 0.02  Sun Sep 19 2004
 	- Renamed from Email::Assemble to Email::Stuff
 

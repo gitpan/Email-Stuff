@@ -15,5 +15,7 @@ LICENSE
 Makefile.PL
 MANIFEST			This list of files
 META.yml
+paypal.gif
 README
+t.data/body.html
 t/01_compile.t

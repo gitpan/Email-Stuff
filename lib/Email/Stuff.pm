@@ -29,52 +29,54 @@ Email::Stuff - Email stuff to people and things... and, like, stuff
   AMBUSH_READY
   
   # Create and Send the Email
-  Email::Stuff->From     ('cpan@ali.as'                  )
-              ->To       ('santa@northpole.org'          )
-              ->BCC      ('bunbun@sluggy.com'            )
-              ->text_body($body                          )
-              ->attach   (file => 'dead_bunbun_faked.gif',
-                          name => 'dead_bunbun_proof.gif')
-              ->send     ('sendmail'                     );
+  Email::Stuff->From     ('cpan@ali.as'                      )
+              ->To       ('santa@northpole.org'              )
+              ->BCC      ('bunbun@sluggy.com'                )
+              ->text_body($body                              )
+              ->attach   (io('dead_bunbun_faked.gif')->all,
+                          filename => 'dead_bunbun_proof.gif')
+              ->send;
 
 =head1 DESCRIPTION
 
-B<Note: Uploaded for review only, guarenteed to do nothing but compile.>
+B<The basics should all work, but this module is still subject to
+name and/or API changes>
 
-B<I REPEAT. MANY KNOWN BUGS. DO NOT USE, ON PAIN OF BUNNIES!!!>
+Email::Stuff, as it's name suggests, is a fairly casual module used
+to email "stuff" to people using the most common methods. It is a fairly
+high-level module designed for ease of use, but implemented on top of the
+tight and correct Email:: modules.
 
-In the spirit of the rest of the Email:: modules, Email::Stuff is a
-relatively light package that wraps over
-L<Email::MIME::Creator|Email::MIME::Creator> to take one more layer of
-details away from the process of building and sending medium complexity
-emails from website and other automated processes.
-
-Email::Stuff is generally used to build emails from within a single
-function, so it contains no parsing support, and little modification
-support. To re-iterate, this is very much a module for those "slap it
-together and send it off" situations, but that still has enough grunt
-behind the scenes to do things properly.
+Email::Stuff is typically used to build emails and send them in a single
+statement, as seen in the synopsis. And it is certain only for use when
+creating and sending emails. As such, it contains no parsing support, and
+little modification support. To re-iterate, this is very much a module for
+those "slap it together and send it off" situations, but that still has
+enough grunt behind the scenes to do things properly.
 
 =head1 METHODS
 
 As you can see from the synopsis, all methods that B<modify> the
-Email::Stuff object returns the object, and thus is chainable.
+Email::Stuff object returns the object, and thus most normal calls are
+chainable.
 
-However, please note that non-modifying methods B<do not> return the
-Email::Stuff object, and thus B<are not> chainable.
+However, please note that C<send>, and the group of methods that do not
+change the Email::Stuff object B<do not> return the  object, and thus
+B<are not> chainable.
 
 =cut
 
 use strict;
 use UNIVERSAL 'isa';
 use Clone                ();
+use File::Basename       ();
 use Email::MIME          ();
 use Email::MIME::Creator ();
 use Email::Send          ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.03';
+	$VERSION = '0.04';
 }
 
 
@@ -94,13 +96,16 @@ Creates a new, empty, Email::Stuff object.
 
 sub new {
 	my $class = ref $_[0] || $_[0];
+
 	my $self = bless {
-		email => Email::MIME->create(
+		send_using => [ 'Sendmail' ],
+		parts      => [],
+		email      => Email::MIME->create(
 			header => [],
 			parts  => [],
 			),
-		parts => [],
 		}, $class;
+
 	$self;
 }
 
@@ -196,7 +201,7 @@ Adds a CC header to the email
 sub CC {
 	my $self = shift->_self;
 	$self->{email}->header_set(CC => shift)
-		? shift : undef;
+		? $self : undef;
 }
 
 =pod
@@ -210,7 +215,21 @@ Adds a BCC header to the email
 sub BCC {
 	my $self = shift->_self;
 	$self->{email}->header_set(BCC => shift)
-		? shift: undef;
+		? $self : undef;
+}
+
+=pod
+
+=head2 Subject $text
+
+Adds a subject to the email
+
+=cut
+
+sub Subject {
+	my $self = shift->_self;
+	$self->{email}->header_set(Subject => shift)
+		? $self : undef;
 }
 
 
@@ -236,8 +255,8 @@ sub text_body {
 	my %attributes = (
 		# Defaults
 		content_type => 'text/plain',
-		charset      => 'US-ASCII',
-		disposition  => 'attachment',
+		charset      => 'us-ascii',
+		format       => 'flowed',
 		# Params overwrite them
 		@_,
 		);
@@ -267,8 +286,7 @@ sub html_body {
 	my %attributes = (
 		# Defaults
 		content_type => 'text/html',
-		charset      => 'US-ASCII',
-		disposition  => 'attachment',
+		charset      => 'us-ascii',
 		# Params overwrite them
 		@_,
 		);
@@ -303,8 +321,13 @@ sub attach {
 		@_,
 		);
 
-	# The more expensive defaults
-	### FINISH ME
+	# The more expensive defaults if needed
+	unless ( $attributes{content_type} ) {
+		require File::Type;
+		$attributes{content_type} = File::Type->checktype_contents($body);
+	}
+
+	### MORE?
 
 	# Determine the slot to put it at
 	my $slot = scalar @{$self->{parts}};
@@ -317,6 +340,44 @@ sub attach {
 		);
 
 	$self;
+}
+
+=pod
+
+=head2 attach_file $file
+
+Provides a one-argument method to attach a file that already exists
+on the filesystem to the email. C<attach_file> will auto-detect the
+MIME type, and use the file's current name when attaching.
+
+=cut
+
+sub attach_file {
+	my $self = shift;
+	my $name = undef;
+	my $body = undef;
+
+	# Support IO::All::File arguments
+	if ( isa(ref $_[0], 'IO::All::File') ) {
+		$name = $_[0]->name;
+		$body = $_[0]->all;
+
+	# Support file names
+	} elsif ( defined $_[0] and -f $_[0] ) {
+		require File::Slurp;
+		$name = $_[0];
+		$body = File::Slurp::read_file( $_[0] );
+
+	# That's it
+	} else {
+		return undef;
+	}
+
+	# Clean the file name
+	$name = File::Basename::basename($name) or return undef;
+
+	# Now attach as normal
+	$self->attach( $body, name => $name, filename => $name );
 }
 
 
@@ -336,7 +397,7 @@ Creates and returns the full L<Email::MIME|Email::MIME> object for the email.
 
 sub Email {
 	my $self = shift;
-	$self->{email}->parts_set( $self->parts );
+	$self->{email}->parts_set( [ $self->parts ] );
 	$self->{email};
 }
 
@@ -355,6 +416,26 @@ sub as_string {
 
 =pod
 
+=head2 using $Driver, @options
+
+The C<using> method specifies the Email::Send driver that you want to use to
+send the email, and any options that need to be passed to the driver at the
+time that we send the mail.
+
+=cut
+
+sub using {
+	my $self = shift;
+	$self->{send_using} = [ @_ ] if @_;
+
+	# Make sure the driver is initialised
+	Email::Send::_init_mailer($self->_driver);
+
+	$self;
+}
+
+=pod
+
 =head2 send
 
 Sends the email via L<Email::Send|Email::Send>.
@@ -363,8 +444,20 @@ Sends the email via L<Email::Send|Email::Send>.
 
 sub send {
 	my $self = shift;
-	### This is probably wong
-	Email::Send->send( $self->Email );	
+	$self->using(@_) if @_; # Arguments are passed to ->using
+	my $Email = $self->Email or return undef;
+	Email::Send::send( $self->_driver, $Email, $self->_options );
+}
+
+sub _driver {
+	my $self = shift;
+	$self->{send_using}->[0];	
+}
+
+sub _options {
+	my $self = shift;
+	my $options = $#{$self->{send_using}};
+	@{$self->{send_using}}[1 .. $options];
 }
 
 1;
@@ -373,11 +466,11 @@ sub send {
 
 =head1 TO DO
 
-- Finish the trickier automated-headers for attachments.
+- Fix a number of bugs still likely to exist
 
-- Write the unit tests
+- Write some proper unit tests. Write ANY unit tests
 
-- Check the stuff we are passing to Email::MIME
+- Add any additional small bit of automation that arn't too expensive
 
 =head1 SUPPORT
 

@@ -23,36 +23,38 @@ SYNOPSIS
       AMBUSH_READY
   
       # Create and Send the Email
-      Email::Stuff->From     ('cpan@ali.as'                  )
-                  ->To       ('santa@northpole.org'          )
-                  ->BCC      ('bunbun@sluggy.com'            )
-                  ->text_body($body                          )
-                  ->attach   (file => 'dead_bunbun_faked.gif',
-                              name => 'dead_bunbun_proof.gif')
-                  ->send     ('sendmail'                     );
+      Email::Stuff->From     ('cpan@ali.as'                      )
+                  ->To       ('santa@northpole.org'              )
+                  ->BCC      ('bunbun@sluggy.com'                )
+                  ->text_body($body                              )
+                  ->attach   (io('dead_bunbun_faked.gif')->all,
+                              filename => 'dead_bunbun_proof.gif')
+                  ->send;
 
 DESCRIPTION
-    Note: Uploaded for review only, guarenteed to do nothing but compile.
+    The basics should all work, but this module is still subject to name
+    and/or API changes
 
-    I REPEAT. MANY KNOWN BUGS. DO NOT USE, ON PAIN OF BUNNIES!!!
+    Email::Stuff, as it's name suggests, is a fairly casual module used to
+    email "stuff" to people using the most common methods. It is a fairly
+    high-level module designed for ease of use, but implemented on top of
+    the tight and correct Email:: modules.
 
-    In the spirit of the rest of the Email:: modules, Email::Stuff is a
-    relatively light package that wraps over Email::MIME::Creator to take
-    one more layer of details away from the process of building and sending
-    medium complexity emails from website and other automated processes.
-
-    Email::Stuff is generally used to build emails from within a single
-    function, so it contains no parsing support, and little modification
-    support. To re-iterate, this is very much a module for those "slap it
-    together and send it off" situations, but that still has enough grunt
-    behind the scenes to do things properly.
+    Email::Stuff is typically used to build emails and send them in a single
+    statement, as seen in the synopsis. And it is certain only for use when
+    creating and sending emails. As such, it contains no parsing support,
+    and little modification support. To re-iterate, this is very much a
+    module for those "slap it together and send it off" situations, but that
+    still has enough grunt behind the scenes to do things properly.
 
 METHODS
     As you can see from the synopsis, all methods that modify the
-    Email::Stuff object returns the object, and thus is chainable.
+    Email::Stuff object returns the object, and thus most normal calls are
+    chainable.
 
-    However, please note that non-modifying methods do not return the
-    Email::Stuff object, and thus are not chainable.
+    However, please note that "send", and the group of methods that do not
+    change the Email::Stuff object do not return the object, and thus are
+    not chainable.
 
   new
     Creates a new, empty, Email::Stuff object.
@@ -81,6 +83,9 @@ METHODS
   BCC $address
     Adds a BCC header to the email
 
+  Subject $text
+    Adds a subject to the email
+
   text_body $body [, $header => $value, ... ]
     Sets the text body of the email. Unless specified, all the appropriate
     headers are set for you. You may overload any as needed. See
@@ -97,6 +102,11 @@ METHODS
     Email::Stuff should TRY to guess the headers right, but you may wish to
     provide them anyway to be sure. Encoding is Base64 by default.
 
+  attach_file $file
+    Provides a one-argument method to attach a file that already exists on
+    the filesystem to the email. "attach_file" will auto-detect the MIME
+    type, and use the file's current name when attaching.
+
   Email
     Creates and returns the full Email::MIME object for the email.
 
@@ -104,15 +114,20 @@ METHODS
     Returns the string form of the email. Identical to (and uses behind the
     scenes) Email::MIME->as_string.
 
+  using $Driver, @options
+    The "using" method specifies the Email::Send driver that you want to use
+    to send the email, and any options that need to be passed to the driver
+    at the time that we send the mail.
+
   send
     Sends the email via Email::Send.
 
 TO DO
-    - Finish the trickier automated-headers for attachments.
+    - Fix a number of bugs still likely to exist
 
-    - Write the unit tests
+    - Write some proper unit tests. Write ANY unit tests
 
-    - Check the stuff we are passing to Email::MIME
+    - Add any additional small bit of automation that arn't too expensive
 
 SUPPORT
     All bugs should be filed via the CPAN bug tracker at
