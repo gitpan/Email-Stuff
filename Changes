@@ -1,5 +1,8 @@
 Revision history for Perl extension Email::Stuff
 
+0.05  Sun Oct  2 2004
+	- Added support for coercion to an Email::MIME object
+
 0.04  Sun Sep 26 2004
 	- First working version, although not thoroughly tested.
 

@@ -35,7 +35,7 @@ DESCRIPTION
     The basics should all work, but this module is still subject to name
     and/or API changes
 
-    Email::Stuff, as it's name suggests, is a fairly casual module used to
+    Email::Stuff, as its name suggests, is a fairly casual module used to
     email "stuff" to people using the most common methods. It is a fairly
     high-level module designed for ease of use, but implemented on top of
     the tight and correct Email:: modules.
@@ -46,6 +46,14 @@ DESCRIPTION
     and little modification support. To re-iterate, this is very much a
     module for those "slap it together and send it off" situations, but that
     still has enough grunt behind the scenes to do things properly.
+
+  Default Mailer
+    Although it cannot be relied upon to work, the default behaviour is to
+    use sendmail to send mail, if you don't provide the mail send channel
+    with either the "using" method, or as an argument to "send".
+
+    The use of sendmail as the default mailer is consistent with the
+    behaviour of the Email::Send module.
 
 METHODS
     As you can see from the synopsis, all methods that modify the
@@ -68,7 +76,7 @@ METHODS
   header $header => $value
     Adds a single named header to the email. Note I said add not set, so you
     can just keep shoving the headers on. But of course, if you want to use
-    to overwrite a header, your stuffed. Because this module is not for
+    to overwrite a header, you're stuffed. Because this module is not for
     changing emails, just throwing stuff together and sending it.
 
   To $address
@@ -107,20 +115,45 @@ METHODS
     the filesystem to the email. "attach_file" will auto-detect the MIME
     type, and use the file's current name when attaching.
 
-  Email
-    Creates and returns the full Email::MIME object for the email.
-
-  as_string
-    Returns the string form of the email. Identical to (and uses behind the
-    scenes) Email::MIME->as_string.
-
   using $Driver, @options
     The "using" method specifies the Email::Send driver that you want to use
     to send the email, and any options that need to be passed to the driver
     at the time that we send the mail.
 
+  Email
+    Creates and returns the full Email::MIME object for the email.
+
+    Email::Stuff also support Param::Coerce coercion to Email::Mime using
+    this method.
+
+  as_string
+    Returns the string form of the email. Identical to (and uses behind the
+    scenes) Email::MIME->as_string.
+
   send
     Sends the email via Email::Send.
+
+COOKBOOK
+  Custom Alerts
+      package SMS::Alert;
+  
+      sub new {
+              shift->SUPER::new(@_)
+                   ->From('monitor@my.website')
+                   # Of course, we could have pulled these from
+                   # $MyConfig->{support_tech} or something similar.
+                   ->To('0416181595@sms.gateway')
+                   ->using(SMTP => '123.123.123.123');
+      }
+
+      package My::Code;
+  
+      unless ( $Server->restart ) {
+              # Notify the admin on call that a server went down and failed
+              # to restart.
+              SMS::Alert->Subject("Server $Server failed to restart cleanly")
+                        ->send;
+      }
 
 TO DO
     - Fix a number of bugs still likely to exist

@@ -42,7 +42,7 @@ Email::Stuff - Email stuff to people and things... and, like, stuff
 B<The basics should all work, but this module is still subject to
 name and/or API changes>
 
-Email::Stuff, as it's name suggests, is a fairly casual module used
+Email::Stuff, as its name suggests, is a fairly casual module used
 to email "stuff" to people using the most common methods. It is a fairly
 high-level module designed for ease of use, but implemented on top of the
 tight and correct Email:: modules.
@@ -53,6 +53,15 @@ creating and sending emails. As such, it contains no parsing support, and
 little modification support. To re-iterate, this is very much a module for
 those "slap it together and send it off" situations, but that still has
 enough grunt behind the scenes to do things properly.
+
+=head2 Default Mailer
+
+Although it cannot be relied upon to work, the default behaviour is to use
+sendmail to send mail, if you don't provide the mail send channel with
+either the C<using> method, or as an argument to C<send>.
+
+The use of sendmail as the default mailer is consistent with the behaviour
+of the L<Email::Send> module.
 
 =head1 METHODS
 
@@ -76,7 +85,7 @@ use Email::Send          ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.04';
+	$VERSION = '0.05';
 }
 
 
@@ -151,7 +160,7 @@ sub parts {
 
 Adds a single named header to the email. Note I said B<add> not set,
 so you can just keep shoving the headers on. But of course, if you
-want to use to overwrite a header, your stuffed. Because B<this module
+want to use to overwrite a header, you're stuffed. Because B<this module
 is not for changing emails, just throwing stuff together and sending it.>
 
 =cut
@@ -380,40 +389,6 @@ sub attach_file {
 	$self->attach( $body, name => $name, filename => $name );
 }
 
-
-
-
-
-#####################################################################
-# Output Methods
-
-=pod
-
-=head2 Email
-
-Creates and returns the full L<Email::MIME|Email::MIME> object for the email.
-
-=cut
-
-sub Email {
-	my $self = shift;
-	$self->{email}->parts_set( [ $self->parts ] );
-	$self->{email};
-}
-
-=pod
-
-=head2 as_string
-
-Returns the string form of the email. Identical to (and uses behind the
-scenes) Email::MIME->as_string.
-
-=cut
-
-sub as_string {
-	shift->Email->as_string;
-}
-
 =pod
 
 =head2 using $Driver, @options
@@ -432,6 +407,46 @@ sub using {
 	Email::Send::_init_mailer($self->_driver);
 
 	$self;
+}
+
+
+
+
+
+#####################################################################
+# Output Methods
+
+=pod
+
+=head2 Email
+
+Creates and returns the full L<Email::MIME|Email::MIME> object for the email.
+
+Email::Stuff also support L<Param::Coerce> coercion to Email::Mime using
+this method.
+
+=cut
+
+sub Email {
+	my $self = shift;
+	$self->{email}->parts_set( [ $self->parts ] );
+	$self->{email};
+}
+
+# Support coercion to an Email::MIME
+BEGIN { *__as_Email_MIME = *Email }
+
+=pod
+
+=head2 as_string
+
+Returns the string form of the email. Identical to (and uses behind the
+scenes) Email::MIME->as_string.
+
+=cut
+
+sub as_string {
+	shift->Email->as_string;
 }
 
 =pod
@@ -463,6 +478,30 @@ sub _options {
 1;
 
 =pod
+
+=head1 COOKBOOK
+
+=head2 Custom Alerts
+
+  package SMS::Alert;
+  
+  sub new {
+          shift->SUPER::new(@_)
+               ->From('monitor@my.website')
+               # Of course, we could have pulled these from
+               # $MyConfig->{support_tech} or something similar.
+               ->To('0416181595@sms.gateway')
+               ->using(SMTP => '123.123.123.123');
+  }
+
+  package My::Code;
+  
+  unless ( $Server->restart ) {
+          # Notify the admin on call that a server went down and failed
+          # to restart.
+          SMS::Alert->Subject("Server $Server failed to restart cleanly")
+                    ->send;
+  }
 
 =head1 TO DO
 
