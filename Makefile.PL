@@ -1,21 +1,20 @@
-require 5.000;
-use ExtUtils::MakeMaker;
-WriteMakefile(
-	'NAME'         => 'Email::Stuff',
-	'VERSION_FROM' => 'lib/Email/Stuff.pm',
-	'PREREQ_PM'    => {
-		# Application dependencies
-		'Email::Simple::Creator' => 0,     # Missing from Email::MIME::Creator
-		'MIME::Base64'           => 0,     # Missing from Email::MIME::Encodings
-		'File::Spec'             => '0.82',
-		'Email::MIME'            => '1.6',
-		'Email::MIME::Creator'   => '1.2',
+use inc::Module::Install;
 
-		# Test dependencies
-		'Test::More'           => '0.47',
-	},
-	($] >= 5.005) ? (
-		'AUTHOR'   => 'Adam Kennedy (cpan@ali.as)',
-		'ABSTRACT' => 'Email stuff to things and people and stuff',
-	) : (),
-);
+name          ( 'Email-Stuff'                     );
+abstract      ( 'Email stuff to people and things... and, like, stuff' );
+author        ( 'Adam Kennedy<cpan@ali.as>'       );
+version_from  ( 'lib/Email/Stuff.pm'              );
+license       ( 'perl'                            );
+
+requires      ( 'perl'                 => '5.005' );
+requires      ( 'Clone'                => '0.13'  );
+requires      ( 'Email::MIME'          => '1.6'   );
+requires      ( 'Email::MIME::Creator' => '1.2'   );
+requires      ( 'Email::Send'          => '0'     );
+
+build_requires( 'Test::More'           => '0.47'  );
+build_requires( 'File::Spec'           => '0.82'  );
+
+auto_install();
+
+&WriteAll;

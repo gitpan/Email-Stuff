@@ -1,10 +1,40 @@
 NAME
-    Email::Stuff - Email stuff to people, and things, and stuff...
+    Email::Stuff - Email stuff to people and things... and, like, stuff
+
+SYNOPSIS
+      # Prepare the message
+      my $body = <<'AMBUSH_READY';
+      Dear Santa
+  
+      I have killed Bun Bun.
+  
+      Yes, I know what you are thinking... but it was actually a total accident.
+  
+      I was in a crowded line at a BayWatch signing, and I tripped, and stood on his head.
+  
+      Yeah, I know. Oops!
+  
+      So, I am willing to sell you the body for $1 million dollars.
+  
+      Be near the pinhole to the Dimension of Pain at midnight.
+  
+      Alias
+  
+      AMBUSH_READY
+  
+      # Create and Send the Email
+      Email::Stuff->From     ('cpan@ali.as'                  )
+                  ->To       ('santa@northpole.org'          )
+                  ->BCC      ('bunbun@sluggy.com'            )
+                  ->text_body($body                          )
+                  ->attach   (file => 'dead_bunbun_faked.gif',
+                              name => 'dead_bunbun_proof.gif')
+                  ->send     ('sendmail'                     );
 
 DESCRIPTION
     Note: Uploaded for review only, guarenteed to do nothing but compile.
 
-    I REPEAT. MANY KNOWN BUGS. DO NOT USE!!!
+    I REPEAT. MANY KNOWN BUGS. DO NOT USE, ON PAIN OF BUNNIES!!!
 
     In the spirit of the rest of the Email:: modules, Email::Stuff is a
     relatively light package that wraps over Email::MIME::Creator to take
@@ -18,23 +48,32 @@ DESCRIPTION
     behind the scenes to do things properly.
 
 METHODS
+    As you can see from the synopsis, all methods that modify the
+    Email::Stuff object returns the object, and thus is chainable.
+
+    However, please note that non-modifying methods do not return the
+    Email::Stuff object, and thus are not chainable.
+
   new
     Creates a new, empty, Email::Stuff object.
 
   headers
-    Returns as a list all of the headers currently set for the Email
+    Returns, as a list, all of the headers currently set for the Email
 
   parts
-    Returns as a list all of the Email::MIME parts for the Email
+    Returns, as a list, the Email::MIME parts for the Email
 
   header $header => $value
-    Adds a single named header to the email
+    Adds a single named header to the email. Note I said add not set, so you
+    can just keep shoving the headers on. But of course, if you want to use
+    to overwrite a header, your stuffed. Because this module is not for
+    changing emails, just throwing stuff together and sending it.
 
   To $address
     Adds a To header to the email
 
   From $address
-    Adds (yes ADDS, just do it once) a From header to the email
+    Adds (yes ADDS, you only do it once) a From header to the email
 
   CC $address
     Adds a CC header to the email
@@ -47,22 +86,16 @@ METHODS
     headers are set for you. You may overload any as needed. See
     Email::MIME::Creator for the actual headers to use.
 
-    Returns the actual Email::MIME part created as a convenience
-
   html_body $body [, $header => $value, ... ]
     Set the HTML body of the email. Unless specified, all the appropriate
     headers are set for you. You may overload any as needed. See
     Email::MIME::Creator for the actual headers to use.
-
-    Returns the actual Email::MIME part created as a convenience
 
   attach $contents [, $header => $value, ... ]
     Adds an attachment to the email. The first argument is the file contents
     followed by (as for text_body and html_body) the list of headers to use.
     Email::Stuff should TRY to guess the headers right, but you may wish to
     provide them anyway to be sure. Encoding is Base64 by default.
-
-    Returns the actual Email::MIME part created as a convenience
 
   Email
     Creates and returns the full Email::MIME object for the email.
@@ -71,13 +104,18 @@ METHODS
     Returns the string form of the email. Identical to (and uses behind the
     scenes) Email::MIME->as_string.
 
-TO DO
-    Finish the trickier auto-headers for attachments
+  send
+    Sends the email via Email::Send.
 
-    Test, test, test
+TO DO
+    - Finish the trickier automated-headers for attachments.
+
+    - Write the unit tests
+
+    - Check the stuff we are passing to Email::MIME
 
 SUPPORT
-    All bugs should be filed via the bug tracker at
+    All bugs should be filed via the CPAN bug tracker at
 
     <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email%3A%3AStuff>
 
@@ -87,9 +125,9 @@ AUTHORS
     Adam Kennedy (Maintainer), <http://ali.as/>, cpan@ali.as
 
 COPYRIGHT
-    Copyright (c) 2003-2004 Adam Kennedy. All rights reserved. This program
-    is free software; you can redistribute it and/or modify it under the
-    same terms as Perl itself.
+    Copyright (c) 2004 Adam Kennedy. All rights reserved. This program is
+    free software; you can redistribute it and/or modify it under the same
+    terms as Perl itself.
 
     The full text of the license can be found in the LICENSE file included
     with this module.
