@@ -1,0 +1,16 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Email-Stuff
+version:      0.02
+version_from: lib/Email/Stuff.pm
+installdirs:  site
+requires:
+    Email::MIME:                   1.6
+    Email::MIME::Creator:          1.2
+    Email::Simple::Creator:        0
+    File::Spec:                    0.82
+    MIME::Base64:                  0
+    Test::More:                    0.47
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.16
