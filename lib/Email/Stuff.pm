@@ -4,7 +4,7 @@ package Email::Stuff;
 
 =head1 NAME
 
-Email::Stuff - Email stuff to people and things... and, like, stuff
+Email::Stuff - A quick and casual approach to creating and sending emails
 
 =head1 SYNOPSIS
 
@@ -76,18 +76,18 @@ B<are not> chainable.
 =cut
 
 use strict;
-use UNIVERSAL 'isa';
-use Clone                ();
-use File::Basename       ();
-use Email::MIME          ();
-use Email::MIME::Creator ();
-use Email::Send          ();
+use Clone                  ();
+use File::Basename         ();
+use Email::MIME            ();
+use Email::MIME::Creator   ();
+use Email::Simple::Headers ();
+use Email::Send            ();
 use prefork 'File::Type';
 use prefork 'File::Slurp';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.06';
+	$VERSION = '0.07';
 }
 
 
@@ -134,19 +134,19 @@ Returns, as a list, all of the headers currently set for the Email
 =cut
 
 sub headers {
-	@{shift->{email}->{header}};
+	shift()->{email}->headers;
 }
 
 =pod
 
 =head2 parts
 
-Returns, as a list, the L<Email::MIME|Email::MIME> parts for the Email
+Returns, as a list, the L<Email::MIME> parts for the Email
 
 =cut
 
 sub parts {
-	grep { defined $_ } @{shift->{parts}};
+	grep { defined $_ } @{shift()->{parts}};
 }
 
 
@@ -168,9 +168,8 @@ is not for changing emails, just throwing stuff together and sending it.>
 =cut
 
 sub header {
-	my $self = shift->_self;
-	$self->{email}->header_set(shift, shift)
-		? $self : undef;
+	my $self = shift()->_self;
+	$self->{email}->header_set(shift, shift) ? $self : undef;
 }
 
 =pod
@@ -182,9 +181,8 @@ Adds a To header to the email
 =cut
 
 sub To {
-	my $self = shift->_self;
-	$self->{email}->header_set(To => shift)
-		? $self : undef;
+	my $self = shift()->_self;
+	$self->{email}->header_set(To => shift) ? $self : undef;
 }
 
 =pod
@@ -196,9 +194,8 @@ Adds (yes ADDS, you only do it once) a From header to the email
 =cut
 
 sub From {
-	my $self = shift->_self;
-	$self->{email}->header_set(From => shift)
-		? $self : undef;
+	my $self = shift()->_self;
+	$self->{email}->header_set(From => shift) ? $self : undef;
 }
 
 =pod
@@ -210,9 +207,8 @@ Adds a CC header to the email
 =cut
 
 sub CC {
-	my $self = shift->_self;
-	$self->{email}->header_set(CC => shift)
-		? $self : undef;
+	my $self = shift()->_self;
+	$self->{email}->header_set(CC => shift) ? $self : undef;
 }
 
 =pod
@@ -224,7 +220,7 @@ Adds a BCC header to the email
 =cut
 
 sub BCC {
-	my $self = shift->_self;
+	my $self = shift()->_self;
 	$self->{email}->header_set(BCC => shift)
 		? $self : undef;
 }
@@ -238,9 +234,8 @@ Adds a subject to the email
 =cut
 
 sub Subject {
-	my $self = shift->_self;
-	$self->{email}->header_set(Subject => shift)
-		? $self : undef;
+	my $self = shift()->_self;
+	$self->{email}->header_set(Subject => shift) ? $self : undef;
 }
 
 
@@ -256,14 +251,14 @@ sub Subject {
 
 Sets the text body of the email. Unless specified, all the appropriate
 headers are set for you. You may overload any as needed. See
-L<Email::MIME::Creator|Email::MIME::Creator> for the actual headers to use.
+L<Email::MIME::Creator> for the actual headers to use.
 
 =cut
 
 sub text_body {
-	my $self       = shift->_self;
-	my $body       = defined $_[0] ? shift : return undef;
-	my %attributes = (
+	my $self = shift()->_self;
+	my $body = defined $_[0] ? shift : return undef;
+	my %attr = (
 		# Defaults
 		content_type => 'text/plain',
 		charset      => 'us-ascii',
@@ -274,7 +269,7 @@ sub text_body {
 
 	# Create the part in the text slot
 	$self->{parts}->[0] = Email::MIME->create(
-		attributes => \%attributes,
+		attributes => \%attr,
 		body       => $body,
 		);
 
@@ -287,14 +282,14 @@ sub text_body {
 
 Set the HTML body of the email. Unless specified, all the appropriate
 headers are set for you. You may overload any as needed. See
-L<Email::MIME::Creator|Email::MIME::Creator> for the actual headers to use.
+L<Email::MIME::Creator> for the actual headers to use.
 
 =cut
 
 sub html_body {
-	my $self       = shift->_self;
-	my $body       = defined $_[0] ? shift : return undef;
-	my %attributes = (
+	my $self = shift()->_self;
+	my $body = defined $_[0] ? shift : return undef;
+	my %attr = (
 		# Defaults
 		content_type => 'text/html',
 		charset      => 'us-ascii',
@@ -304,7 +299,7 @@ sub html_body {
 
 	# Create the part in the HTML slot
 	$self->{parts}->[1] = Email::MIME->create(
-		attributes => \%attributes,
+		attributes => \%attr,
 		body       => $body,
 		);
 
@@ -323,9 +318,9 @@ to provide them anyway to be sure. Encoding is Base64 by default.
 =cut
 
 sub attach {
-	my $self       = shift->_self;
-	my $body       = defined $_[0] ? shift : return undef;
-	my %attributes = (
+	my $self = shift()->_self;
+	my $body = defined $_[0] ? shift : return undef;
+	my %attr = (
 		# Cheap defaults
 		encoding => 'base64',
 		# Params overwrite them
@@ -333,9 +328,9 @@ sub attach {
 		);
 
 	# The more expensive defaults if needed
-	unless ( $attributes{content_type} ) {
+	unless ( $attr{content_type} ) {
 		require File::Type;
-		$attributes{content_type} = File::Type->checktype_contents($body);
+		$attr{content_type} = File::Type->checktype_contents($body);
 	}
 
 	### MORE?
@@ -346,7 +341,7 @@ sub attach {
 
 	# Create the part in the attachment slot
 	$self->{parts}->[$slot] = Email::MIME->create(
-		attributes => \%attributes,
+		attributes => \%attr,
 		body       => $body,
 		);
 
@@ -369,7 +364,7 @@ sub attach_file {
 	my $body = undef;
 
 	# Support IO::All::File arguments
-	if ( isa(ref $_[0], 'IO::All::File') ) {
+	if ( UNIVERSAL::isa(ref $_[0], 'IO::All::File') ) {
 		$name = $_[0]->name;
 		$body = $_[0]->all;
 
@@ -395,7 +390,7 @@ sub attach_file {
 
 =head2 using $Driver, @options
 
-The C<using> method specifies the Email::Send driver that you want to use to
+The C<using> method specifies the L<Email::Send> driver that you want to use to
 send the email, and any options that need to be passed to the driver at the
 time that we send the mail.
 
@@ -420,50 +415,52 @@ sub using {
 
 =pod
 
-=head2 Email
+=head2 email
 
-Creates and returns the full L<Email::MIME|Email::MIME> object for the email.
-
-Email::Stuff also support L<Param::Coerce> coercion to Email::Mime using
-this method.
+Creates and returns the full L<Email::MIME> object for the email.
 
 =cut
 
-sub Email {
-	my $self = shift;
-	$self->{email}->parts_set( [ $self->parts ] );
+sub email {
+	my $self  = shift;
+	my @parts = $self->parts;
+	$self->{email}->parts_set( \@parts ) if @parts;
 	$self->{email};
 }
 
+BEGIN {
+	*Email = *email;
+}
+
 # Support coercion to an Email::MIME
-BEGIN { *__as_Email_MIME = *Email }
+sub __as_Email_MIME { shift()->email }
 
 =pod
 
 =head2 as_string
 
 Returns the string form of the email. Identical to (and uses behind the
-scenes) Email::MIME->as_string.
+scenes) Email::MIME-E<gt>as_string.
 
 =cut
 
 sub as_string {
-	shift->Email->as_string;
+	shift()->email->as_string;
 }
 
 =pod
 
 =head2 send
 
-Sends the email via L<Email::Send|Email::Send>.
+Sends the email via L<Email::Send>.
 
 =cut
 
 sub send {
 	my $self = shift;
 	$self->using(@_) if @_; # Arguments are passed to ->using
-	my $Email = $self->Email or return undef;
-	Email::Send::send( $self->_driver, $Email, $self->_options );
+	my $email = $self->email or return undef;
+	Email::Send::send( $self->_driver, $email, $self->_options );
 }
 
 sub _driver {
@@ -488,12 +485,12 @@ sub _options {
   package SMS::Alert;
   
   sub new {
-          shift->SUPER::new(@_)
-               ->From('monitor@my.website')
-               # Of course, we could have pulled these from
-               # $MyConfig->{support_tech} or something similar.
-               ->To('0416181595@sms.gateway')
-               ->using(SMTP => '123.123.123.123');
+          shift()->SUPER::new(@_)
+                 ->From('monitor@my.website')
+                 # Of course, we could have pulled these from
+                 # $MyConfig->{support_tech} or something similar.
+                 ->To('0416181595@sms.gateway')
+                 ->using(SMTP => '123.123.123.123');
   }
 
   package My::Code;
@@ -517,17 +514,18 @@ sub _options {
 
 All bugs should be filed via the CPAN bug tracker at
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email%3A%3AStuff>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email-Stuff>
 
-For other issues, contact the author
+For other issues, or commercial enhancement or support, contact the author.
 
 =head1 AUTHORS
 
-Adam Kennedy (Maintainer), L<http://ali.as/>, cpan@ali.as
+Adam Kennedy E<lt>cpan@ali.asE<gt>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

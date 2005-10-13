@@ -1,5 +1,12 @@
 Revision history for Perl extension Email::Stuff
 
+0.07  Fri Oct 14 2005
+	- Adding more unit tests
+	- Added dependency on Email::Send::Test
+	- POD cleanup
+	- Renamed ->Email to ->email
+	- Added dependency on Email::Simple::Headers
+
 0.06  Sun Nov  6 2004
 	- Adding prefork pragma for File::Type and File::Slurp
 
