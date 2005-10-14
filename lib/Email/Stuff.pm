@@ -4,7 +4,7 @@ package Email::Stuff;
 
 =head1 NAME
 
-Email::Stuff - A quick and casual approach to creating and sending emails
+Email::Stuff - A more casual approach to creating and sending Email:: emails
 
 =head1 SYNOPSIS
 
@@ -18,9 +18,9 @@ Email::Stuff - A quick and casual approach to creating and sending emails
   
   I was in a crowded line at a BayWatch signing, and I tripped, and stood on his head.
   
-  Yeah, I know. Oops!
+  I know. Oops! :/
   
-  So, I am willing to sell you the body for $1 million dollars.
+  So anyways, I am willing to sell you the body for $1 million dollars.
   
   Be near the pinhole to the Dimension of Pain at midnight.
   
@@ -28,10 +28,10 @@ Email::Stuff - A quick and casual approach to creating and sending emails
   
   AMBUSH_READY
   
-  # Create and Send the Email
-  Email::Stuff->From     ('cpan@ali.as'                      )
-              ->To       ('santa@northpole.org'              )
-              ->BCC      ('bunbun@sluggy.com'                )
+  # Create and send the email in one shot
+  Email::Stuff->from     ('cpan@ali.as'                      )
+              ->to       ('santa@northpole.org'              )
+              ->bcc      ('bunbun@sluggy.com'                )
               ->text_body($body                              )
               ->attach   (io('dead_bunbun_faked.gif')->all,
                           filename => 'dead_bunbun_proof.gif')
@@ -43,16 +43,19 @@ B<The basics should all work, but this module is still subject to
 name and/or API changes>
 
 Email::Stuff, as its name suggests, is a fairly casual module used
-to email "stuff" to people using the most common methods. It is a fairly
-high-level module designed for ease of use, but implemented on top of the
-tight and correct Email:: modules.
+to email "stuff" to people using the most common methods. It is a 
+high-level module designed for ease of use when doing a very specific
+common task, but implemented on top of the tight and correct Email::
+modules.
 
 Email::Stuff is typically used to build emails and send them in a single
 statement, as seen in the synopsis. And it is certain only for use when
-creating and sending emails. As such, it contains no parsing support, and
-little modification support. To re-iterate, this is very much a module for
-those "slap it together and send it off" situations, but that still has
-enough grunt behind the scenes to do things properly.
+creating and sending emails. As such, it contains no email parsing
+capability, and little to no modification support.
+
+To re-iterate, this is very much a module for those "slap it together and
+fire it off" situations, but that still has enough grunt behind the scenes
+to do things properly.
 
 =head2 Default Mailer
 
@@ -61,7 +64,90 @@ sendmail to send mail, if you don't provide the mail send channel with
 either the C<using> method, or as an argument to C<send>.
 
 The use of sendmail as the default mailer is consistent with the behaviour
-of the L<Email::Send> module.
+of the L<Email::Send> module itself.
+
+=head2 Why use this?
+
+Why not just use L<Email::Simple> or L<Email::MIME>? After all, this just adds
+another layer of stuff around those. Wouldn't using them directly be better?
+
+Certainly, if you know EXACTLY what you are doing. The docs are clear enough,
+but you really do need to have an understanding of the structure of MIME
+emails. This structure is going to be different depending on whether you have
+text body, HTML, both, with or without an attachment etc.
+
+Then there's brevity... compare the following roughly equivalent code.
+
+First, the Email::Stuff way.
+
+  Email::Stuff->to('Simon Cozens<simon@somewhere.jp>')
+              ->from('Santa@northpole.org')
+              ->text_body("You've been a good boy this year. No coal for you.")
+              ->attach_file('choochoo.gif')
+              ->send;
+
+And now doing it directly with a knowledge of what your attachment is, and
+what the correct MIME structure is.
+
+  use Email::MIME;
+  use Email::MIME::Creator;
+  use Email::Send;
+  use IO::All;
+  
+  send SMTP => Email::MIME->create(
+    header => [
+        To => 'simon@somewhere.jp',
+        From => 'santa@northpole.org',
+    ],
+    parts => [
+        Email::MIME->create(
+          body => "You've been a good boy this year. No coal for you."
+        ),
+        Email::MIME->create(
+          body => io('choochoo.gif'),
+          attributes => {
+              filename => 'choochoo.gif',
+              content_type => 'image/gif',
+          },
+       ),
+    ],
+  );
+
+Again, if you know MIME well, and have the patience to manually code up
+the L<Email::MIME> structure, go do that.
+
+Email::Stuff, as the name suggests, solves one case and one case only.
+
+Generate some stuff, and email it to somewhere. As conveniently as
+possible. DWIM, but do it as thinly as possible and use the solid
+Email:: modules underneath.
+
+=head1 COOKBOOK
+
+Here is another example (maybe plural later) of how you can use
+Email::Stuff's brevity to your advantage.
+
+=head2 Custom Alerts
+
+  package SMS::Alert;
+  
+  sub new {
+          shift()->SUPER::new(@_)
+                 ->from('monitor@my.website')
+                 # Of course, we could have pulled these from
+                 # $MyConfig->{support_tech} or something similar.
+                 ->to('0416181595@sms.gateway')
+                 ->using(SMTP => '123.123.123.123');
+  }
+
+  package My::Code;
+  
+  unless ( $Server->restart ) {
+          # Notify the admin on call that a server went down and failed
+          # to restart.
+          SMS::Alert->subject("Server $Server failed to restart cleanly")
+                    ->send;
+  }
 
 =head1 METHODS
 
@@ -87,7 +173,7 @@ use prefork 'File::Slurp';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.07';
+	$VERSION = '0.08';
 }
 
 
@@ -174,68 +260,68 @@ sub header {
 
 =pod
 
-=head2 To $address
+=head2 to $address
 
-Adds a To header to the email
+Adds a To: header to the email
 
 =cut
 
-sub To {
+sub to {
 	my $self = shift()->_self;
-	$self->{email}->header_set(To => shift) ? $self : undef;
+	$self->{email}->header_set(to => shift) ? $self : undef;
 }
 
 =pod
 
-=head2 From $address
+=head2 from $address
 
-Adds (yes ADDS, you only do it once) a From header to the email
+Adds (yes ADDS, you only do it once) a From: header to the email
 
 =cut
 
-sub From {
+sub from {
 	my $self = shift()->_self;
-	$self->{email}->header_set(From => shift) ? $self : undef;
+	$self->{email}->header_set(from => shift) ? $self : undef;
 }
 
 =pod
 
-=head2 CC $address
+=head2 cc $address
 
-Adds a CC header to the email
+Adds a Cc: header to the email
 
 =cut
 
-sub CC {
+sub cc {
 	my $self = shift()->_self;
-	$self->{email}->header_set(CC => shift) ? $self : undef;
+	$self->{email}->header_set(cc => shift) ? $self : undef;
 }
 
 =pod
 
-=head2 BCC $address
+=head2 bcc $address
 
-Adds a BCC header to the email
+Adds a Bcc: header to the email
 
 =cut
 
-sub BCC {
+sub bcc {
 	my $self = shift()->_self;
-	$self->{email}->header_set(BCC => shift)
+	$self->{email}->header_set(bcc => shift)
 		? $self : undef;
 }
 
 =pod
 
-=head2 Subject $text
+=head2 subject $text
 
 Adds a subject to the email
 
 =cut
 
-sub Subject {
+sub subject {
 	my $self = shift()->_self;
-	$self->{email}->header_set(Subject => shift) ? $self : undef;
+	$self->{email}->header_set(subject => shift) ? $self : undef;
 }
 
 
@@ -428,10 +514,6 @@ sub email {
 	$self->{email};
 }
 
-BEGIN {
-	*Email = *email;
-}
-
 # Support coercion to an Email::MIME
 sub __as_Email_MIME { shift()->email }
 
@@ -474,33 +556,19 @@ sub _options {
 	@{$self->{send_using}}[1 .. $options];
 }
 
+# Legacy compatibility
+BEGIN {
+	*To      = *to;
+	*From    = *from;
+	*CC      = *cc;
+	*BCC     = *bcc;
+	*Subject = *subject;
+	*Email   = *email;
+}
+
 1;
 
 =pod
-
-=head1 COOKBOOK
-
-=head2 Custom Alerts
-
-  package SMS::Alert;
-  
-  sub new {
-          shift()->SUPER::new(@_)
-                 ->From('monitor@my.website')
-                 # Of course, we could have pulled these from
-                 # $MyConfig->{support_tech} or something similar.
-                 ->To('0416181595@sms.gateway')
-                 ->using(SMTP => '123.123.123.123');
-  }
-
-  package My::Code;
-  
-  unless ( $Server->restart ) {
-          # Notify the admin on call that a server went down and failed
-          # to restart.
-          SMS::Alert->Subject("Server $Server failed to restart cleanly")
-                    ->send;
-  }
 
 =head1 TO DO
 

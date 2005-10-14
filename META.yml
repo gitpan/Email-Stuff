@@ -1,6 +1,6 @@
 name: Email-Stuff
-version: 0.07
-abstract: A quick and casual approach to creating and sending emails
+version: 0.08
+abstract: A more casual approach to creating and sending Email:: emails
 author: Adam Kennedy <cpan@ali.as>
 license: perl
 distribution_type: module

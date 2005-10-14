@@ -1,5 +1,11 @@
 Revision history for Perl extension Email::Stuff
 
+0.08  Fri Oct 14 2005
+	- Refactoring based on advice from Jesse Vincent
+	- Moved all the cased method names to lower case
+	  (left cased aliases for legacy code).
+	- Added additional "Why not just use Email::MIME" doc section
+
 0.07  Fri Oct 14 2005
 	- Adding more unit tests
 	- Added dependency on Email::Send::Test

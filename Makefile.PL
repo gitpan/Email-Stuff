@@ -1,7 +1,7 @@
 use inc::Module::Install;
 
 name           ( 'Email-Stuff'                         );
-abstract       ( 'A quick and casual approach to creating and sending emails' );
+abstract       ( 'A more casual approach to creating and sending Email:: emails' );
 author         ( 'Adam Kennedy <cpan@ali.as>'          );
 version_from   ( 'lib/Email/Stuff.pm'                  );
 license        ( 'perl'                                );

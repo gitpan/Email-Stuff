@@ -45,14 +45,14 @@ my @headers = $Stuff->headers;
 ok( scalar(@headers), 'Even the default object has headers' );
 
 # Set a To name
-my $rv = $Stuff->To('adam@ali.as');
+my $rv = $Stuff->to('adam@ali.as');
 stuff_ok( $Stuff );
 stuff_ok( $rv    );
 is( $Stuff->as_string, $rv->as_string, '->To returns the same object' );
 is( $Stuff->email->header('To'), 'adam@ali.as', '->To sets To header' );
 
 # Set a From name
-$rv = $Stuff->From('bob@ali.as');
+$rv = $Stuff->from('bob@ali.as');
 stuff_ok( $Stuff );
 stuff_ok( $rv    );
 is( $Stuff->as_string, $rv->as_string, '->From returns the same object' );
@@ -60,9 +60,9 @@ is( $Stuff->email->header('From'), 'bob@ali.as', '->From sets From header' );
 
 # More complex one
 use Email::Send::Test ();
-my $rv2 = Email::Stuff->From       ( 'Adam Kennedy<adam@phase-n.com>')
-                     ->To         ( 'adam@phase-n.com'              )
-                     ->Subject    ( 'Hello To:!'                    )
+my $rv2 = Email::Stuff->from       ( 'Adam Kennedy<adam@phase-n.com>')
+                     ->to         ( 'adam@phase-n.com'              )
+                     ->subject    ( 'Hello To:!'                    )
                      ->text_body  ( 'I am an email'                 )
                      ->attach_file( catfile('t.data', 'paypal.gif') )
                      ->using      ( 'Test'                          )
