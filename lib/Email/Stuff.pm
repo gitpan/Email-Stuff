@@ -161,7 +161,9 @@ B<are not> chainable.
 
 =cut
 
+use 5.005;
 use strict;
+use Carp                   ();
 use Clone                  ();
 use File::Basename         ();
 use Email::MIME            ();
@@ -173,7 +175,7 @@ use prefork 'File::Slurp';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.08';
+	$VERSION = '2.00';
 }
 
 
@@ -196,6 +198,7 @@ sub new {
 
 	my $self = bless {
 		send_using => [ 'Sendmail' ],
+		# mailer   => undef,
 		parts      => [],
 		email      => Email::MIME->create(
 			header => [],
@@ -484,10 +487,13 @@ time that we send the mail.
 
 sub using {
 	my $self = shift;
-	$self->{send_using} = [ @_ ] if @_;
 
-	# Make sure the driver is initialised
-	Email::Send::_init_mailer($self->_driver);
+	if ( @_ ) {
+		# Change the mailer
+		$self->{send_using} = [ @_ ];
+		delete $self->{mailer};
+		$self->mailer;
+	}
 
 	$self;
 }
@@ -542,12 +548,12 @@ sub send {
 	my $self = shift;
 	$self->using(@_) if @_; # Arguments are passed to ->using
 	my $email = $self->email or return undef;
-	Email::Send::send( $self->_driver, $email, $self->_options );
+	$self->mailer->send( $email );
 }
 
 sub _driver {
 	my $self = shift;
-	$self->{send_using}->[0];	
+	$self->{send_using}->[0];
 }
 
 sub _options {
@@ -556,15 +562,48 @@ sub _options {
 	@{$self->{send_using}}[1 .. $options];
 }
 
-# Legacy compatibility
-BEGIN {
-	*To      = *to;
-	*From    = *from;
-	*CC      = *cc;
-	*BCC     = *bcc;
-	*Subject = *subject;
-	*Email   = *email;
+=pod
+
+=head2 mailer
+
+If you need to interact with it directly, the C<mailer> method
+returns the L<Email::Send> mailer object that will be used to
+send the email.
+
+Returns an L<Email::Send> object, or dies if the driver is not
+available.
+
+=cut
+
+sub mailer { 
+	my $self = shift;
+	return $self->{mailer} if $self->{mailer};
+
+	my $driver = $self->_driver;
+	$self->{mailer} = Email::Send->new( {
+		mailer      => $driver,
+		mailer_args => [ $self->_options ],
+		} );
+	unless ( $self->{mailer}->mailer_available($driver, $self->_options) ) {
+		Carp::croak("Driver $driver is not available");
+	}
+
+	$self->{mailer};
 }
+
+
+
+
+
+#####################################################################
+# Legacy compatibility
+
+sub To      { shift->to(@_)      }
+sub From    { shift->from(@_)    }
+sub CC      { shift->cc(@_)      }
+sub BCC     { shift->bcc(@_)     }
+sub Subject { shift->subject(@_) }
+sub Email   { shift->email(@_)   }
 
 1;
 

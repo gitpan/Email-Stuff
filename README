@@ -216,6 +216,12 @@ METHODS
   send
     Sends the email via Email::Send.
 
+  mailer
+    If you need to interact with it directly, the "mailer" method returns
+    the Email::Send mailer object that will be used to send the email.
+
+    Returns an Email::Send object, or dies if the driver is not available.
+
 TO DO
     - Fix a number of bugs still likely to exist
 
