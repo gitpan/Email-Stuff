@@ -201,10 +201,13 @@ METHODS
     the filesystem to the email. "attach_file" will auto-detect the MIME
     type, and use the file's current name when attaching.
 
-  using $Driver, @options
+  using $drivername, @options
     The "using" method specifies the Email::Send driver that you want to use
     to send the email, and any options that need to be passed to the driver
     at the time that we send the mail.
+
+    Alternatively, you can pass a complete mailer object (which must be an
+    Email::Send object) and it will be used as is.
 
   email
     Creates and returns the full Email::MIME object for the email.
