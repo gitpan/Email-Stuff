@@ -1,22 +1,31 @@
 #!/usr/bin/perl
 
+# Test that the syntax of our POD documentation is valid
+
 use strict;
 BEGIN {
 	$|  = 1;
 	$^W = 1;
 }
-use Test::More;
 
-# Skip if doing a regular install
-unless ( $ENV{AUTOMATED_TESTING} ) {
+my $MODULE = 'Test::Pod 1.00';
+
+# Don't run tests for installs
+use Test::More;
+unless ( $ENV{AUTOMATED_TESTING} or $ENV{RELEASE_TESTING} ) {
 	plan( skip_all => "Author tests not required for installation" );
 }
 
-# Can we run the POD tests?
-eval "use Test::Pod 1.00";
+# Load the testing module
+eval "use $MODULE";
 if ( $@ ) {
-	plan( skip_all => "Test::Pod 1.00 required for testing POD" );
+	$ENV{RELEASE_TESTING}
+	? die( "Failed to load required release-testing module $MODULE" )
+	: plan( skip_all => "$MODULE not available for testing" );
 }
+
+all_pod_files_ok();
+
 
 
 
@@ -29,7 +38,10 @@ if ( $@ ) {
 # Hack Pod::Simple::BlackBox to ignore the Test::Inline
 # "Extended Begin" syntax.
 # For example, "=begin has more than one word errors"
-my $begin = \&Pod::Simple::BlackBox::_ponder_begin;
+my $begin;
+if ( $Test::Pod::VERSION ) {
+	$begin = \&Pod::Simple::BlackBox::_ponder_begin;
+}
 sub mybegin {
 	my $para = $_[1];
 	my $content = join ' ', splice @$para, 2;
@@ -50,12 +62,11 @@ sub mybegin {
 
 SCOPE: {
 	local $^W = 0;
-	*Pod::Simple::BlackBox::_ponder_begin = \&mybegin;
+	if ( $Test::Pod::VERSION ) {
+		*Pod::Simple::BlackBox::_ponder_begin = \&mybegin;
+	}
 }
 
 #####################################################################
 # END BLACK MAGIC
 #####################################################################
-
-# Test POD
-all_pod_files_ok();
