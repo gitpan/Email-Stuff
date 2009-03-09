@@ -1,7 +1,7 @@
 ---
 abstract: 'A more casual approach to creating and sending Email:: emails'
 author:
-  - 'Adam Kennedy <adamk@cpan.org>'
+  - 'B<Current maintainer>: Ricardo Signes C<rjbs@cpan.org>'
 build_requires:
   Email::Send::Test: 2.04
   File::Spec: 0.80
@@ -30,4 +30,4 @@ requires:
   prefork: 1.01
 resources:
   license: http://dev.perl.org/licenses/
-version: 2.07
+version: 2.08
