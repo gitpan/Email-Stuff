@@ -22,8 +22,7 @@ no_index:
     - t
 requires:
   Carp: 0
-  Email::MIME: 1.858
-  Email::MIME::Creator: 1.451
+  Email::MIME: 1.901
   Email::Send: 2.185
   Email::Simple: 1.998
   File::Basename: 0
@@ -33,4 +32,4 @@ requires:
   prefork: 1.01
 resources:
   license: http://dev.perl.org/licenses/
-version: 2.100
+version: 2.101

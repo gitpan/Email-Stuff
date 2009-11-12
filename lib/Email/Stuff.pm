@@ -171,7 +171,7 @@ use prefork 'File::Type';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '2.100';
+	$VERSION = '2.101';
 }
 
 #####################################################################
@@ -247,7 +247,7 @@ is not for changing emails, just throwing stuff together and sending it.>
 
 sub header {
 	my $self = shift()->_self;
-	$self->{email}->header_set(shift, shift) ? $self : undef;
+	$self->{email}->header_str_set(ucfirst shift, shift) ? $self : undef;
 }
 
 =head2 to $address
@@ -258,7 +258,7 @@ Adds a To: header to the email
 
 sub to {
 	my $self = shift()->_self;
-	$self->{email}->header_set(to => shift) ? $self : undef;
+	$self->{email}->header_str_set(To => shift) ? $self : undef;
 }
 
 =head2 from $address
@@ -269,7 +269,7 @@ Adds (yes ADDS, you only do it once) a From: header to the email
 
 sub from {
 	my $self = shift()->_self;
-	$self->{email}->header_set(from => shift) ? $self : undef;
+	$self->{email}->header_str_set(From => shift) ? $self : undef;
 }
 
 =head2 cc $address
@@ -280,7 +280,7 @@ Adds a Cc: header to the email
 
 sub cc {
 	my $self = shift()->_self;
-	$self->{email}->header_set(cc => shift) ? $self : undef;
+	$self->{email}->header_str_set(Cc => shift) ? $self : undef;
 }
 
 =head2 bcc $address
@@ -291,7 +291,7 @@ Adds a Bcc: header to the email
 
 sub bcc {
 	my $self = shift()->_self;
-	$self->{email}->header_set(bcc => shift) ? $self : undef;
+	$self->{email}->header_str_set(Bcc => shift) ? $self : undef;
 }
 
 =head2 subject $text
@@ -302,7 +302,7 @@ Adds a subject to the email
 
 sub subject {
 	my $self = shift()->_self;
-	$self->{email}->header_set(subject => shift) ? $self : undef;
+	$self->{email}->header_str_set(Subject => shift) ? $self : undef;
 }
 
 #####################################################################
@@ -322,7 +322,8 @@ sub text_body {
 	my %attr = (
 		# Defaults
 		content_type => 'text/plain',
-		charset      => 'us-ascii',
+		charset      => 'utf-8',
+		encoding     => 'quoted-printable',
 		format       => 'flowed',
 		# Params overwrite them
 		@_,
@@ -331,7 +332,7 @@ sub text_body {
 	# Create the part in the text slot
 	$self->{parts}->[0] = Email::MIME->create(
 		attributes => \%attr,
-		body       => $body,
+		body_str   => $body,
 		);
 
 	$self;
@@ -351,7 +352,8 @@ sub html_body {
 	my %attr = (
 		# Defaults
 		content_type => 'text/html',
-		charset      => 'us-ascii',
+		charset      => 'utf-8',
+		encoding     => 'quoted-printable',
 		# Params overwrite them
 		@_,
 		);
@@ -359,7 +361,7 @@ sub html_body {
 	# Create the part in the HTML slot
 	$self->{parts}->[1] = Email::MIME->create(
 		attributes => \%attr,
-		body       => $body,
+		body_str   => $body,
 		);
 
 	$self;
@@ -542,7 +544,7 @@ sub _transfer_headers {
         foreach my $header_name (@headers_move) {
                 next if _any { $_ eq $header_name } @headers_skip;
                 my @values = $_[0]->header($header_name);
-                $_[1]->header_set( $header_name, @values );
+                $_[1]->header_str_set( $header_name, @values );
         }
 }
 
