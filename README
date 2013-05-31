@@ -1,3 +1,13 @@
 
-For documentation on Email-Stuff, consult the POD.
+
+This archive contains the distribution Email-Stuff,
+version 2.103:
+
+  A more casual approach to creating and sending Email:: emails
+
+This software is copyright (c) 2013 by Ricardo Signes.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 
