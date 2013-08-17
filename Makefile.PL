@@ -20,11 +20,11 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "Email::Stuff",
   "PREREQ_PM" => {
-    "Carp" => 0,
+    "Carp" => "0",
     "Email::MIME" => "1.901",
     "Email::Send" => "2.185",
     "Email::Simple" => "1.998",
-    "File::Basename" => 0,
+    "File::Basename" => "0",
     "File::Type" => "0.22",
     "Params::Util" => "0.23",
     "prefork" => "1.01"
@@ -34,7 +34,7 @@ my %WriteMakefileArgs = (
     "File::Spec" => "0.80",
     "Test::More" => "0.47"
   },
-  "VERSION" => "2.103",
+  "VERSION" => "2.104",
   "test" => {
     "TESTS" => "t/*.t"
   }
