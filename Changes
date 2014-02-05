@@ -1,5 +1,8 @@
 Revision history for Perl extension Email::Stuff
 
+2.10      2014-02-05
+        - update repo and and bugtracker links
+
 2.104     2013-08-16
           Documentation improvements (kd).
 

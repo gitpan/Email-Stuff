@@ -205,7 +205,7 @@ use prefork 'File::Type';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '2.104';
+	$VERSION = '2.105';
 }
 
 #####################################################################
